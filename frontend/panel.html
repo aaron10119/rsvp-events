@@ -1,369 +1,182 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel RSVP</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f6f7fb;
-      color: #222;
-    }
-    .topbar {
-      background: #111;
-      color: #fff;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .topbar h1 {
-      margin: 0;
-      font-size: 22px;
-    }
-    .topbar .right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .topbar button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #fff;
-      color: #111;
-      font-weight: bold;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 24px auto;
-      padding: 0 16px;
-    }
-
-    .box {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.05);
-      margin-bottom: 20px;
-    }
-
-    .box h2 {
-      margin-top: 0;
-    }
-
-    .events-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
-
-    .event-card {
-      border: 1px solid #e6e6e6;
-      border-radius: 14px;
-      padding: 16px;
-      background: #fff;
-    }
-
-    .event-card h3 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .stat {
-      background: #f7f7f7;
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .stat .n {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .event-card button {
-      margin-top: 12px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: #111;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .filters {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .filters input,
-    .filters select {
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      background: #fff;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-      vertical-align: top;
-    }
-
-    th {
-      background: #fafafa;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .pendiente {
-      background: #fff4d6;
-      color: #9a6a00;
-    }
-
-    .confirmado {
-      background: #e6ffed;
-      color: #0d7a2d;
-    }
-
-    .rechazado {
-      background: #ffe6e6;
-      color: #a00000;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .muted {
-      color: #666;
-    }
-
-        .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .form-grid input,
-    .form-grid button {
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .form-grid button {
-      background: #111;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .actions-cell {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn-small {
-      padding: 8px 10px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .btn-copy {
-      background: #111;
-      color: #fff;
-    }
-
-    .btn-edit {
-      background: #e9ecef;
-      color: #111;
-    }
-
-    @media (max-width: 900px) {
-      .stats {
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
-      }
-      table {
-        display: block;
-        overflow-x: auto;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <h1>Panel RSVP</h1>
-    <div class="right">
-      <span id="userName">Cargando usuario...</span>
-      <button id="btnLogout">Cerrar sesión</button>
-    </div>
-  </div>
-
-  <div class="container">
-
-    <div class="box">
-      <h2>Tus eventos</h2>
-      <div id="eventsContainer" class="events-grid"></div>
-    </div>
-
-    <div id="invitadosSection" class="box hidden">
-      <h2 id="tituloEventoSeleccionado">Invitados del evento</h2>
-      <div id="agregarInvitadoBox" class="box" style="padding:16px; margin-top:16px; background:#fafafa;">
-        <h3 style="margin-top:0;">Agregar invitado</h3>
-
-        <div class="form-grid">
-          <input type="text" id="nuevoNombre" placeholder="Nombre del invitado" />
-          <input type="text" id="nuevoTelefono" placeholder="Teléfono" />
-          <input type="number" id="nuevoPases" placeholder="Pases" min="1" value="1" />
-          <input type="number" id="nuevoAcompanantes" placeholder="Acompañantes permitidos" min="0" value="0" />
-          <input type="text" id="nuevaMesa" placeholder="Número de mesa" />
-          <input type="text" id="nuevoGrupo" placeholder="Grupo familiar" />
-          <button id="btnAgregarInvitado" type="button">Guardar invitado</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel RSVP</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <h1>Panel RSVP</h1>
+        <div class="right">
+          <span id="userName">Cargando usuario...</span>
+          <button id="btnLogout" class="btn btn-small btn-secondary">
+            Cerrar sesión
+          </button>
         </div>
       </div>
-      <div class="filters">
-        <input type="text" id="searchInput" placeholder="Buscar invitado..." />
-        <select id="statusFilter">
-          <option value="">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="rechazado">Rechazado</option>
-        </select>
+      <div class="box">
+        <h2>Tus eventos</h2>
+        <div id="eventsContainer" class="grid grid-cards"></div>
       </div>
 
-      <div class="muted" id="resumenInvitados"></div>
+      <div id="invitadosSection" class="box hidden">
+        <h2 id="tituloEventoSeleccionado">Invitados del evento</h2>
+        <div
+          id="agregarInvitadoBox"
+          class="box"
+          style="padding: 16px; margin-top: 16px; background: #fafafa"
+        >
+          <h3 style="margin-top: 0">Agregar invitado</h3>
 
-      <div style="margin-top:16px;">
-  <table>
-<thead>
-  <tr>
-    <th>Invitado</th>
-    <th>Teléfono</th>
-    <th>Código</th>
-    <th>Pases</th>
-    <th>Mesa</th>
-    <th>Estado</th>
-    <th>Confirmados</th>
-    <th>Mensaje</th>
-    <th>Fecha</th>
-    <th>Link</th>
-    <th>Acciones</th>
-  </tr>
-</thead>
-          <tbody id="tablaInvitados"></tbody>
-        </table>
+          <div class="form-grid">
+            <div>
+              <label>Nombre del invitado</label>
+              <input type="text" id="nuevoNombre" />
+            </div>
+
+            <div>
+              <label>Teléfono</label>
+              <input type="text" id="nuevoTelefono" />
+            </div>
+
+            <div>
+              <label>Pases</label>
+              <input type="number" id="nuevoPases" min="1" value="1" />
+            </div>
+
+            <div>
+              <label>Acompañantes permitidos</label>
+              <input type="number" id="nuevoAcompanantes" min="0" value="0" />
+            </div>
+
+            <div>
+              <label>Número de mesa</label>
+              <input type="text" id="nuevaMesa" />
+            </div>
+
+            <div>
+              <label>Grupo familiar</label>
+              <input type="text" id="nuevoGrupo" />
+            </div>
+          </div>
+
+          <div style="margin-top: 16px">
+            <button id="btnAgregarInvitado" class="btn btn-primary">
+              Agregar invitado
+            </button>
+          </div>
+        </div>
+        <div class="filters">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Buscar invitado..."
+          />
+          <select id="statusFilter">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="rechazado">Rechazado</option>
+          </select>
+        </div>
+
+        <div class="muted" id="resumenInvitados"></div>
+
+        <div style="margin-top: 16px">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Invitado</th>
+                <th>Teléfono</th>
+                <th>Pases</th>
+                <th>Mesa</th>
+                <th>Estado</th>
+                <th>Mensaje</th>
+                <th>Link</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaInvitados"></tbody>
+          </table>
+        </div>
       </div>
     </div>
+    <script>
+      const API_BASE = "/events-api/api";
 
-  </div>
+      const userName = document.getElementById("userName");
+      const btnLogout = document.getElementById("btnLogout");
+      const eventsContainer = document.getElementById("eventsContainer");
+      const invitadosSection = document.getElementById("invitadosSection");
+      const tituloEventoSeleccionado = document.getElementById(
+        "tituloEventoSeleccionado",
+      );
+      const tablaInvitados = document.getElementById("tablaInvitados");
+      const resumenInvitados = document.getElementById("resumenInvitados");
+      const searchInput = document.getElementById("searchInput");
+      const statusFilter = document.getElementById("statusFilter");
+      const btnAgregarInvitado = document.getElementById("btnAgregarInvitado");
+      const nuevoNombre = document.getElementById("nuevoNombre");
+      const nuevoTelefono = document.getElementById("nuevoTelefono");
+      const nuevoPases = document.getElementById("nuevoPases");
+      const nuevoAcompanantes = document.getElementById("nuevoAcompanantes");
+      const nuevaMesa = document.getElementById("nuevaMesa");
+      const nuevoGrupo = document.getElementById("nuevoGrupo");
 
-  <script>
-   const API_BASE = "/events-api/api";
+      let eventos = [];
+      let invitadosActuales = [];
+      let nombreEventoActual = "";
+      let idEventoActual = null;
 
-    const userName = document.getElementById("userName");
-    const btnLogout = document.getElementById("btnLogout");
-    const eventsContainer = document.getElementById("eventsContainer");
-    const invitadosSection = document.getElementById("invitadosSection");
-    const tituloEventoSeleccionado = document.getElementById("tituloEventoSeleccionado");
-    const tablaInvitados = document.getElementById("tablaInvitados");
-    const resumenInvitados = document.getElementById("resumenInvitados");
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
-        const btnAgregarInvitado = document.getElementById("btnAgregarInvitado");
-    const nuevoNombre = document.getElementById("nuevoNombre");
-    const nuevoTelefono = document.getElementById("nuevoTelefono");
-    const nuevoPases = document.getElementById("nuevoPases");
-    const nuevoAcompanantes = document.getElementById("nuevoAcompanantes");
-    const nuevaMesa = document.getElementById("nuevaMesa");
-    const nuevoGrupo = document.getElementById("nuevoGrupo");
+      function escapeHtml(text) {
+        if (text === null || text === undefined) return "";
+        return String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-    let eventos = [];
-    let invitadosActuales = [];
-    let nombreEventoActual = "";
-    let idEventoActual = null;
+      function badgeEstado(estado) {
+        const est = (estado || "").toLowerCase();
 
-    function escapeHtml(text) {
-      if (text === null || text === undefined) return "";
-      return String(text)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+        if (est === "confirmado")
+          return `<span class="badge badge-success">Confirmado</span>`;
+        if (est === "rechazado")
+          return `<span class="badge badge-danger">Rechazado</span>`;
+        return `<span class="badge badge-warning">Pendiente</span>`;
+      }
 
-    function badgeEstado(estado) {
-      const est = (estado || "").toLowerCase();
-      return `<span class="badge ${est}">${escapeHtml(estado || "-")}</span>`;
-    }
+      async function validarSesion() {
+        try {
+          const res = await fetch(`${API_BASE}/auth/me.php`, {
+            method: "GET",
+            credentials: "include",
+          });
 
-    async function validarSesion() {
-      try {
-        const res = await fetch(`${API_BASE}/auth/me.php`, {
-          method: "GET",
-          credentials: "include"
-        });
+          const data = await res.json();
 
-        const data = await res.json();
+          if (!data.ok) {
+            window.location.href = "login.html";
+            return null;
+          }
 
-        if (!data.ok) {
+          userName.textContent = `Hola, ${data.data.nombre}`;
+          return data.data;
+        } catch (error) {
+          console.error(error);
           window.location.href = "login.html";
           return null;
         }
-
-        userName.textContent = `Hola, ${data.data.nombre}`;
-        return data.data;
-      } catch (error) {
-        console.error(error);
-        window.location.href = "login.html";
-        return null;
       }
-    }
 
-    async function cargarDashboard() {
-      try {
+          async function cargarDashboard() {
+            try {
         const res = await fetch(`${API_BASE}/dashboard.php`, {
           method: "GET",
           credentials: "include"
@@ -442,7 +255,7 @@
         tituloEventoSeleccionado.textContent = `Invitados de: ${nombreEventoActual}`;
         invitadosSection.classList.remove("hidden");
         renderTabla();
-
+        
         invitadosSection.scrollIntoView({
           behavior: "smooth"
         });
@@ -453,227 +266,254 @@
       }
     }
 
-    function renderTabla() {
-      const q = searchInput.value.trim().toLowerCase();
-      const estado = statusFilter.value;
+      function renderTabla() {
+        const q = searchInput.value.trim().toLowerCase();
+        const estado = statusFilter.value;
 
       const filtrados = invitadosActuales.filter(item => {
-        const coincideTexto =
-          (item.nombre || "").toLowerCase().includes(q) ||
-          (item.codigo_invitado || "").toLowerCase().includes(q) ||
-          (item.telefono || "").toLowerCase().includes(q) ||
-          (item.grupo_familiar || "").toLowerCase().includes(q);
+          const coincideTexto =
+            (item.nombre || "").toLowerCase().includes(q) ||
+            (item.codigo_invitado || "").toLowerCase().includes(q) ||
+            (item.telefono || "").toLowerCase().includes(q) ||
+            (item.grupo_familiar || "").toLowerCase().includes(q);
 
-        const coincideEstado = !estado || item.estado_invitado === estado;
+          const coincideEstado = !estado || item.estado_invitado === estado;
 
-        return coincideTexto && coincideEstado;
+          return coincideTexto && coincideEstado;
+        });
+
+        resumenInvitados.textContent = `${filtrados.length} invitado(s) mostrados de ${invitadosActuales.length}`;
+
+        if (!filtrados.length) {
+          tablaInvitados.innerHTML = `
+  <tr>
+    <td colspan="11">No se encontraron invitados.</td>
+  </tr>
+  `;
+          return;
+        }
+
+        tablaInvitados.innerHTML = filtrados
+          .map(
+            (item) => `
+<tr>
+
+<td data-label="Invitado">
+<strong>${escapeHtml(item.nombre)}</strong>
+</td>
+
+<td data-label="Teléfono">
+${escapeHtml(item.telefono || "-")}
+</td>
+
+<td data-label="Pases">
+${escapeHtml(item.pases ?? "-")}
+</td>
+
+<td data-label="Mesa">
+${escapeHtml(item.numero_mesa || "-")}
+</td>
+
+<td data-label="Estado">
+${badgeEstado(item.estado_invitado)}
+</td>
+
+<td data-label="Mensaje">
+${
+  item.mensaje_confirmacion
+    ? `<button class="btn btn-small btn-secondary" onclick="verMensaje(${JSON.stringify(item.mensaje_confirmacion)})">Ver</button>`
+    : "-"
+}
+</td>
+
+<td data-label="Link">
+<button class="btn btn-small btn-copy" onclick="copiarLink(${JSON.stringify(item.link_personalizado || "")})">
+Copiar
+</button>
+</td>
+
+<td data-label="Acciones">
+<div class="actions-cell">
+<button class="btn btn-small btn-edit" onclick="editarInvitado(${Number(item.id_invitado)})">
+Editar
+</button>
+</div>
+</td>
+
+</tr>
+`,
+          )
+          .join("");
+      }
+      function verMensaje(mensaje) {
+        alert(mensaje);
+      }
+      async function copiarLink(link) {
+        if (!link) {
+          alert("Este invitado no tiene link personalizado");
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(link);
+          alert("Link copiado");
+        } catch (error) {
+          console.error(error);
+          prompt("Copia este link:", link);
+        }
+      }
+
+      async function editarInvitado(idInvitado) {
+        const item = invitadosActuales.find(
+          (x) => Number(x.id_invitado) === Number(idInvitado),
+        );
+
+        if (!item) {
+          alert("Invitado no encontrado");
+          return;
+        }
+
+        const nombre = prompt("Nombre", item.nombre || "");
+        if (nombre === null) return;
+
+        const telefono = prompt("Teléfono", item.telefono || "");
+        if (telefono === null) return;
+
+        const pases = prompt("Pases", item.pases ?? 1);
+        if (pases === null) return;
+
+        const acompanantes = prompt(
+          "Acompañantes permitidos",
+          item.acompanantes_permitidos ?? 0,
+        );
+        if (acompanantes === null) return;
+
+        const mesa = prompt("Número de mesa", item.numero_mesa || "");
+        if (mesa === null) return;
+
+        const grupo = prompt("Grupo familiar", item.grupo_familiar || "");
+        if (grupo === null) return;
+
+        try {
+          const res = await fetch(`${API_BASE}/invitado_editar.php`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              id_invitado: idInvitado,
+              nombre: nombre.trim(),
+              telefono: telefono.trim(),
+              pases: parseInt(pases, 10),
+              acompanantes_permitidos: parseInt(acompanantes, 10),
+              numero_mesa: mesa.trim(),
+              grupo_familiar: grupo.trim(),
+            }),
+          });
+
+          const data = await res.json();
+
+          if (!data.ok) {
+            alert(data.message || "No se pudo editar el invitado");
+            return;
+          }
+
+          alert("Invitado actualizado correctamente");
+          await verInvitados(idEventoActual, nombreEventoActual);
+        } catch (error) {
+          console.error(error);
+          alert("Error al editar invitado");
+        }
+      }
+
+      btnLogout.addEventListener("click", async function () {
+        try {
+          const res = await fetch(`${API_BASE}/auth/logout.php`, {
+            method: "POST",
+            credentials: "include",
+          });
+
+          const data = await res.json();
+
+          if (data.ok) {
+            window.location.href = "login.html";
+            return;
+          }
+
+          alert(data.message || "No se pudo cerrar sesión");
+        } catch (error) {
+          console.error(error);
+          alert("Error al cerrar sesión");
+        }
       });
 
-      resumenInvitados.textContent = `${filtrados.length} invitado(s) mostrados de ${invitadosActuales.length}`;
-
-      if (!filtrados.length) {
-        tablaInvitados.innerHTML = `
-          <tr>
-            <td colspan="11">No se encontraron invitados.</td>
-          </tr>
-        `;
-        return;
-      }
-
-      tablaInvitados.innerHTML = filtrados.map(item => `
-        <tr>
-          <td>
-            <strong>${escapeHtml(item.nombre)}</strong><br>
-            <span class="muted">${escapeHtml(item.grupo_familiar || "")}</span>
-          </td>
-          <td>${escapeHtml(item.telefono || "-")}</td>
-          <td>${escapeHtml(item.codigo_invitado || "-")}</td>
-          <td>${escapeHtml(item.pases ?? "-")}</td>
-          <td>${escapeHtml(item.numero_mesa || "-")}</td>
-          <td>${badgeEstado(item.estado_invitado)}</td>
-          <td>${escapeHtml(item.cantidad_confirmada ?? 0)}</td>
-          <td>${escapeHtml(item.mensaje_confirmacion || "-")}</td>
-          <td>${escapeHtml(item.fecha_confirmacion || "-")}</td>
-          <td>
-            <button class="btn-small btn-copy" onclick="copiarLink(${JSON.stringify(item.link_personalizado || "")})">
-              Copiar
-            </button>
-          </td>
-          <td>
-            <div class="actions-cell">
-              <button class="btn-small btn-edit" onclick="editarInvitado(${Number(item.id_invitado)})">
-                Editar
-              </button>
-            </div>
-          </td>
-        </tr>
-      `).join("");
-    }
-
-
-        async function copiarLink(link) {
-      if (!link) {
-        alert("Este invitado no tiene link personalizado");
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(link);
-        alert("Link copiado");
-      } catch (error) {
-        console.error(error);
-        prompt("Copia este link:", link);
-      }
-    }
-
-    async function editarInvitado(idInvitado) {
-      const item = invitadosActuales.find(x => Number(x.id_invitado) === Number(idInvitado));
-
-      if (!item) {
-        alert("Invitado no encontrado");
-        return;
-      }
-
-      const nombre = prompt("Nombre", item.nombre || "");
-      if (nombre === null) return;
-
-      const telefono = prompt("Teléfono", item.telefono || "");
-      if (telefono === null) return;
-
-      const pases = prompt("Pases", item.pases ?? 1);
-      if (pases === null) return;
-
-      const acompanantes = prompt("Acompañantes permitidos", item.acompanantes_permitidos ?? 0);
-      if (acompanantes === null) return;
-
-      const mesa = prompt("Número de mesa", item.numero_mesa || "");
-      if (mesa === null) return;
-
-      const grupo = prompt("Grupo familiar", item.grupo_familiar || "");
-      if (grupo === null) return;
-
-      try {
-        const res = await fetch(`${API_BASE}/invitado_editar.php`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            id_invitado: idInvitado,
-            nombre: nombre.trim(),
-            telefono: telefono.trim(),
-            pases: parseInt(pases, 10),
-            acompanantes_permitidos: parseInt(acompanantes, 10),
-            numero_mesa: mesa.trim(),
-            grupo_familiar: grupo.trim()
-          })
-        });
-
-        const data = await res.json();
-
-        if (!data.ok) {
-          alert(data.message || "No se pudo editar el invitado");
+      btnAgregarInvitado.addEventListener("click", async function () {
+        if (!idEventoActual) {
+          alert("Primero selecciona un evento");
           return;
         }
 
-        alert("Invitado actualizado correctamente");
-        await verInvitados(idEventoActual, nombreEventoActual);
+        const payload = {
+          id_evento: idEventoActual,
+          nombre: nuevoNombre.value.trim(),
+          telefono: nuevoTelefono.value.trim(),
+          pases: parseInt(nuevoPases.value || "1", 10),
+          acompanantes_permitidos: parseInt(nuevoAcompanantes.value || "0", 10),
+          numero_mesa: nuevaMesa.value.trim(),
+          grupo_familiar: nuevoGrupo.value.trim(),
+        };
 
-      } catch (error) {
-        console.error(error);
-        alert("Error al editar invitado");
-      }
-    }
-
-btnLogout.addEventListener("click", async function () {
-  try {
-    const res = await fetch(`${API_BASE}/auth/logout.php`, {
-      method: "POST",
-      credentials: "include"
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    alert(data.message || "No se pudo cerrar sesión");
-  } catch (error) {
-    console.error(error);
-    alert("Error al cerrar sesión");
-  }
-});
-
-    btnAgregarInvitado.addEventListener("click", async function () {
-      if (!idEventoActual) {
-        alert("Primero selecciona un evento");
-        return;
-      }
-
-      const payload = {
-        id_evento: idEventoActual,
-        nombre: nuevoNombre.value.trim(),
-        telefono: nuevoTelefono.value.trim(),
-        pases: parseInt(nuevoPases.value || "1", 10),
-        acompanantes_permitidos: parseInt(nuevoAcompanantes.value || "0", 10),
-        numero_mesa: nuevaMesa.value.trim(),
-        grupo_familiar: nuevoGrupo.value.trim()
-      };
-
-      if (!payload.nombre) {
-        alert("Escribe el nombre del invitado");
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/invitado_crear.php`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!data.ok) {
-          alert(data.message || "No se pudo agregar el invitado");
+        if (!payload.nombre) {
+          alert("Escribe el nombre del invitado");
           return;
         }
 
-        alert("Invitado agregado correctamente");
+        try {
+          const res = await fetch(`${API_BASE}/invitado_crear.php`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
 
-        nuevoNombre.value = "";
-        nuevoTelefono.value = "";
-        nuevoPases.value = "1";
-        nuevoAcompanantes.value = "0";
-        nuevaMesa.value = "";
-        nuevoGrupo.value = "";
+          const data = await res.json();
 
-        await verInvitados(idEventoActual, nombreEventoActual);
+          if (!data.ok) {
+            alert(data.message || "No se pudo agregar el invitado");
+            return;
+          }
 
-      } catch (error) {
-        console.error(error);
-        alert("Error al agregar invitado");
-      }
-    });
+          alert("Invitado agregado correctamente");
 
-    searchInput.addEventListener("input", renderTabla);
-    statusFilter.addEventListener("change", renderTabla);
+          nuevoNombre.value = "";
+          nuevoTelefono.value = "";
+          nuevoPases.value = "1";
+          nuevoAcompanantes.value = "0";
+          nuevaMesa.value = "";
+          nuevoGrupo.value = "";
 
-    window.verInvitados = verInvitados;
-    window.copiarLink = copiarLink;
-    window.editarInvitado = editarInvitado;
+          await verInvitados(idEventoActual, nombreEventoActual);
+        } catch (error) {
+          console.error(error);
+          alert("Error al agregar invitado");
+        }
+      });
 
-    (async function init() {
+      searchInput.addEventListener("input", renderTabla);
+      statusFilter.addEventListener("change", renderTabla);
+
+      window.verInvitados = verInvitados;
+      window.copiarLink = copiarLink;
+      window.editarInvitado = editarInvitado;
+
+      (async function init() {
       const user = await validarSesion();
       if (!user) return;
-      await cargarDashboard();
-    })();
-  </script>
-</body>
+        await cargarDashboard();
+      })();
+    </script>
+  </body>
 </html>
