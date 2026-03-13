@@ -47,6 +47,7 @@ $sql = "SELECT
             nombre,
             telefono,
             codigo_invitado,
+            link_personalizado,
             pases,
             acompanantes_permitidos,
             numero_mesa,

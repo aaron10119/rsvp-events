@@ -173,6 +173,54 @@
       color: #666;
     }
 
+        .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .form-grid input,
+    .form-grid button {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .form-grid button {
+      background: #111;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-small {
+      padding: 8px 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .btn-copy {
+      background: #111;
+      color: #fff;
+    }
+
+    .btn-edit {
+      background: #e9ecef;
+      color: #111;
+    }
+
     @media (max-width: 900px) {
       .stats {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
@@ -202,7 +250,19 @@
 
     <div id="invitadosSection" class="box hidden">
       <h2 id="tituloEventoSeleccionado">Invitados del evento</h2>
+      <div id="agregarInvitadoBox" class="box" style="padding:16px; margin-top:16px; background:#fafafa;">
+        <h3 style="margin-top:0;">Agregar invitado</h3>
 
+        <div class="form-grid">
+          <input type="text" id="nuevoNombre" placeholder="Nombre del invitado" />
+          <input type="text" id="nuevoTelefono" placeholder="Teléfono" />
+          <input type="number" id="nuevoPases" placeholder="Pases" min="1" value="1" />
+          <input type="number" id="nuevoAcompanantes" placeholder="Acompañantes permitidos" min="0" value="0" />
+          <input type="text" id="nuevaMesa" placeholder="Número de mesa" />
+          <input type="text" id="nuevoGrupo" placeholder="Grupo familiar" />
+          <button id="btnAgregarInvitado" type="button">Guardar invitado</button>
+        </div>
+      </div>
       <div class="filters">
         <input type="text" id="searchInput" placeholder="Buscar invitado..." />
         <select id="statusFilter">
@@ -216,20 +276,21 @@
       <div class="muted" id="resumenInvitados"></div>
 
       <div style="margin-top:16px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Invitado</th>
-              <th>Teléfono</th>
-              <th>Código</th>
-              <th>Pases</th>
-              <th>Mesa</th>
-              <th>Estado</th>
-              <th>Confirmados</th>
-              <th>Mensaje</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
+<thead>
+  <tr>
+    <th>Invitado</th>
+    <th>Teléfono</th>
+    <th>Código</th>
+    <th>Pases</th>
+    <th>Mesa</th>
+    <th>Estado</th>
+    <th>Confirmados</th>
+    <th>Mensaje</th>
+    <th>Fecha</th>
+    <th>Link</th>
+    <th>Acciones</th>
+  </tr>
+</thead>
           <tbody id="tablaInvitados"></tbody>
         </table>
       </div>
@@ -249,10 +310,18 @@
     const resumenInvitados = document.getElementById("resumenInvitados");
     const searchInput = document.getElementById("searchInput");
     const statusFilter = document.getElementById("statusFilter");
+        const btnAgregarInvitado = document.getElementById("btnAgregarInvitado");
+    const nuevoNombre = document.getElementById("nuevoNombre");
+    const nuevoTelefono = document.getElementById("nuevoTelefono");
+    const nuevoPases = document.getElementById("nuevoPases");
+    const nuevoAcompanantes = document.getElementById("nuevoAcompanantes");
+    const nuevaMesa = document.getElementById("nuevaMesa");
+    const nuevoGrupo = document.getElementById("nuevoGrupo");
 
     let eventos = [];
     let invitadosActuales = [];
     let nombreEventoActual = "";
+    let idEventoActual = null;
 
     function escapeHtml(text) {
       if (text === null || text === undefined) return "";
@@ -351,7 +420,8 @@
       }
     }
 
-    async function verInvitados(idEvento, nombreEvento) {
+       async function verInvitados(idEvento, nombreEvento) {
+      idEventoActual = idEvento;
       nombreEventoActual = nombreEvento;
 
       try {
@@ -403,7 +473,7 @@
       if (!filtrados.length) {
         tablaInvitados.innerHTML = `
           <tr>
-            <td colspan="9">No se encontraron invitados.</td>
+            <td colspan="11">No se encontraron invitados.</td>
           </tr>
         `;
         return;
@@ -423,8 +493,96 @@
           <td>${escapeHtml(item.cantidad_confirmada ?? 0)}</td>
           <td>${escapeHtml(item.mensaje_confirmacion || "-")}</td>
           <td>${escapeHtml(item.fecha_confirmacion || "-")}</td>
+          <td>
+            <button class="btn-small btn-copy" onclick="copiarLink(${JSON.stringify(item.link_personalizado || "")})">
+              Copiar
+            </button>
+          </td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-small btn-edit" onclick="editarInvitado(${Number(item.id_invitado)})">
+                Editar
+              </button>
+            </div>
+          </td>
         </tr>
       `).join("");
+    }
+
+
+        async function copiarLink(link) {
+      if (!link) {
+        alert("Este invitado no tiene link personalizado");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(link);
+        alert("Link copiado");
+      } catch (error) {
+        console.error(error);
+        prompt("Copia este link:", link);
+      }
+    }
+
+    async function editarInvitado(idInvitado) {
+      const item = invitadosActuales.find(x => Number(x.id_invitado) === Number(idInvitado));
+
+      if (!item) {
+        alert("Invitado no encontrado");
+        return;
+      }
+
+      const nombre = prompt("Nombre", item.nombre || "");
+      if (nombre === null) return;
+
+      const telefono = prompt("Teléfono", item.telefono || "");
+      if (telefono === null) return;
+
+      const pases = prompt("Pases", item.pases ?? 1);
+      if (pases === null) return;
+
+      const acompanantes = prompt("Acompañantes permitidos", item.acompanantes_permitidos ?? 0);
+      if (acompanantes === null) return;
+
+      const mesa = prompt("Número de mesa", item.numero_mesa || "");
+      if (mesa === null) return;
+
+      const grupo = prompt("Grupo familiar", item.grupo_familiar || "");
+      if (grupo === null) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/invitado_editar.php`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id_invitado: idInvitado,
+            nombre: nombre.trim(),
+            telefono: telefono.trim(),
+            pases: parseInt(pases, 10),
+            acompanantes_permitidos: parseInt(acompanantes, 10),
+            numero_mesa: mesa.trim(),
+            grupo_familiar: grupo.trim()
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert(data.message || "No se pudo editar el invitado");
+          return;
+        }
+
+        alert("Invitado actualizado correctamente");
+        await verInvitados(idEventoActual, nombreEventoActual);
+
+      } catch (error) {
+        console.error(error);
+        alert("Error al editar invitado");
+      }
     }
 
 btnLogout.addEventListener("click", async function () {
@@ -448,10 +606,67 @@ btnLogout.addEventListener("click", async function () {
   }
 });
 
+    btnAgregarInvitado.addEventListener("click", async function () {
+      if (!idEventoActual) {
+        alert("Primero selecciona un evento");
+        return;
+      }
+
+      const payload = {
+        id_evento: idEventoActual,
+        nombre: nuevoNombre.value.trim(),
+        telefono: nuevoTelefono.value.trim(),
+        pases: parseInt(nuevoPases.value || "1", 10),
+        acompanantes_permitidos: parseInt(nuevoAcompanantes.value || "0", 10),
+        numero_mesa: nuevaMesa.value.trim(),
+        grupo_familiar: nuevoGrupo.value.trim()
+      };
+
+      if (!payload.nombre) {
+        alert("Escribe el nombre del invitado");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/invitado_crear.php`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert(data.message || "No se pudo agregar el invitado");
+          return;
+        }
+
+        alert("Invitado agregado correctamente");
+
+        nuevoNombre.value = "";
+        nuevoTelefono.value = "";
+        nuevoPases.value = "1";
+        nuevoAcompanantes.value = "0";
+        nuevaMesa.value = "";
+        nuevoGrupo.value = "";
+
+        await verInvitados(idEventoActual, nombreEventoActual);
+
+      } catch (error) {
+        console.error(error);
+        alert("Error al agregar invitado");
+      }
+    });
+
     searchInput.addEventListener("input", renderTabla);
     statusFilter.addEventListener("change", renderTabla);
 
     window.verInvitados = verInvitados;
+    window.copiarLink = copiarLink;
+    window.editarInvitado = editarInvitado;
 
     (async function init() {
       const user = await validarSesion();
