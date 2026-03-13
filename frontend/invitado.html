@@ -1,115 +1,99 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Confirmar asistencia</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <title>Confirmar asistencia</title>
+  </head>
+  <body>
+    <div class="card">
+      <h1 id="evento"></h1>
 
-<h2 id="evento"></h2>
+      <p id="info" class="subtitle"></p>
 
-<div id="info"></div>
+      <form id="rsvpForm">
+        <label>¿Asistirás?</label>
+        <select id="asistencia">
+          <option value="si">Sí asistiré</option>
+          <option value="no">No podré asistir</option>
+        </select>
 
-<form id="rsvpForm">
+        <br />
 
-<label>Asistirás?</label>
-<select id="asistencia">
-<option value="si">Sí asistiré</option>
-<option value="no">No podré asistir</option>
-</select>
+        <label>Cantidad de personas</label>
+        <input type="number" id="cantidad" min="1" />
 
-<br><br>
-<paleta>dame paleta</paleta>
-<label>Cantidad de personas</label>
-<input type="number" id="cantidad" min="1">
+        <br />
 
-<br><br>
+        <label>Mensaje</label>
+        <textarea id="mensaje"></textarea>
 
-<label>Mensaje</label>
-<textarea id="mensaje"></textarea>
+        <br />
 
-<br><br>
+        <button type="submit" class="btn">Confirmar asistencia</button>
+      </form>
 
-<button type="submit">Confirmar</button>
+      <div id="resultado" class="muted" style="margin-top: 12px"></div>
+    </div>
 
-</form>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const codigo = urlParams.get("codigo");
 
-<div id="resultado"></div>
+      let invitadoData = null;
 
-<script>
+      async function cargarInvitado() {
+        const res = await fetch(
+          `http://localhost/events-api/api/invitado.php?codigo=${codigo}`,
+        );
 
-const urlParams = new URLSearchParams(window.location.search);
-const codigo = urlParams.get("codigo");
+        const data = await res.json();
 
-let invitadoData = null;
+        if (!data.ok) {
+          document.body.innerHTML = "Invitado no encontrado";
+          return;
+        }
 
-async function cargarInvitado() {
+        invitadoData = data.data;
 
-const res = await fetch(
-`http://localhost/events-api/api/invitado.php?codigo=${codigo}`
-);
+        document.getElementById("evento").innerText =
+          invitadoData.nombre_evento;
 
-const data = await res.json();
-
-if(!data.ok){
-
-document.body.innerHTML = "Invitado no encontrado";
-return;
-
-}
-
-invitadoData = data.data;
-
-document.getElementById("evento").innerText =
-invitadoData.nombre_evento;
-
-document.getElementById("info").innerHTML = `
+        document.getElementById("info").innerHTML = `
 Invitado: ${invitadoData.nombre} <br>
 Pases: ${invitadoData.pases}
 `;
 
-document.getElementById("cantidad").max = invitadoData.pases;
+        document.getElementById("cantidad").max = invitadoData.pases;
+      }
 
-}
+      cargarInvitado();
 
-cargarInvitado();
+      document
+        .getElementById("rsvpForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
+          const payload = {
+            id_evento: invitadoData.id_evento,
+            id_invitado: invitadoData.id_invitado,
+            asistencia: document.getElementById("asistencia").value,
+            cantidad_confirmada: document.getElementById("cantidad").value,
+            mensaje: document.getElementById("mensaje").value,
+          };
 
-document
-.getElementById("rsvpForm")
-.addEventListener("submit", async function(e){
+          const res = await fetch("http://localhost/events-api/api/rsvp.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
 
-e.preventDefault();
+          const data = await res.json();
 
-const payload = {
-
-id_evento: invitadoData.id_evento,
-id_invitado: invitadoData.id_invitado,
-asistencia: document.getElementById("asistencia").value,
-cantidad_confirmada: document.getElementById("cantidad").value,
-mensaje: document.getElementById("mensaje").value
-
-};
-
-const res = await fetch(
-"http://localhost/events-api/api/rsvp.php",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body: JSON.stringify(payload)
-}
-);
-
-const data = await res.json();
-
-document.getElementById("resultado").innerText =
-data.message;
-
-});
-
-</script>
-
-</body>
+          document.getElementById("resultado").innerText = data.message;
+        });
+    </script>
+  </body>
 </html>
