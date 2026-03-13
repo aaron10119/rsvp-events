@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel RSVP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #222;
+    }
+    .topbar {
+      background: #111;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .topbar button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #fff;
+      color: #111;
+      font-weight: bold;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.05);
+      margin-bottom: 20px;
+    }
+
+    .box h2 {
+      margin-top: 0;
+    }
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .event-card {
+      border: 1px solid #e6e6e6;
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .event-card h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      background: #f7f7f7;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat .n {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .event-card button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #111;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filters input,
+    .filters select {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #fafafa;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .pendiente {
+      background: #fff4d6;
+      color: #9a6a00;
+    }
+
+    .confirmado {
+      background: #e6ffed;
+      color: #0d7a2d;
+    }
+
+    .rechazado {
+      background: #ffe6e6;
+      color: #a00000;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .muted {
+      color: #666;
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Panel RSVP</h1>
+    <div class="right">
+      <span id="userName">Cargando usuario...</span>
+      <button id="btnLogout">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="box">
+      <h2>Tus eventos</h2>
+      <div id="eventsContainer" class="events-grid"></div>
+    </div>
+
+    <div id="invitadosSection" class="box hidden">
+      <h2 id="tituloEventoSeleccionado">Invitados del evento</h2>
+
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Buscar invitado..." />
+        <select id="statusFilter">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="rechazado">Rechazado</option>
+        </select>
+      </div>
+
+      <div class="muted" id="resumenInvitados"></div>
+
+      <div style="margin-top:16px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Invitado</th>
+              <th>Teléfono</th>
+              <th>Código</th>
+              <th>Pases</th>
+              <th>Mesa</th>
+              <th>Estado</th>
+              <th>Confirmados</th>
+              <th>Mensaje</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tablaInvitados"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+   const API_BASE = "/events-api/api";
+
+    const userName = document.getElementById("userName");
+    const btnLogout = document.getElementById("btnLogout");
+    const eventsContainer = document.getElementById("eventsContainer");
+    const invitadosSection = document.getElementById("invitadosSection");
+    const tituloEventoSeleccionado = document.getElementById("tituloEventoSeleccionado");
+    const tablaInvitados = document.getElementById("tablaInvitados");
+    const resumenInvitados = document.getElementById("resumenInvitados");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+
+    let eventos = [];
+    let invitadosActuales = [];
+    let nombreEventoActual = "";
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return "";
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function badgeEstado(estado) {
+      const est = (estado || "").toLowerCase();
+      return `<span class="badge ${est}">${escapeHtml(estado || "-")}</span>`;
+    }
+
+    async function validarSesion() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me.php`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          window.location.href = "login.html";
+          return null;
+        }
+
+        userName.textContent = `Hola, ${data.data.nombre}`;
+        return data.data;
+      } catch (error) {
+        console.error(error);
+        window.location.href = "login.html";
+        return null;
+      }
+    }
+
+    async function cargarDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/dashboard.php`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          eventsContainer.innerHTML = `<p>${escapeHtml(data.message || "No se pudo cargar el dashboard")}</p>`;
+          return;
+        }
+
+        eventos = data.data || [];
+
+        if (!eventos.length) {
+          eventsContainer.innerHTML = `<p>No hay eventos registrados todavía.</p>`;
+          return;
+        }
+
+        eventsContainer.innerHTML = eventos.map(evento => `
+          <div class="event-card">
+            <h3>${escapeHtml(evento.nombre_evento)}</h3>
+            <div><strong>Slug:</strong> ${escapeHtml(evento.slug || "-")}</div>
+            <div><strong>Fecha:</strong> ${escapeHtml(evento.fecha_evento || "-")}</div>
+            <div><strong>Estatus:</strong> ${escapeHtml(evento.estatus || "-")}</div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="n">${Number(evento.total_invitados || 0)}</div>
+                <div>Total</div>
+              </div>
+              <div class="stat">
+                <div class="n">${Number(evento.confirmados || 0)}</div>
+                <div>Confirmados</div>
+              </div>
+              <div class="stat">
+                <div class="n">${Number(evento.rechazados || 0)}</div>
+                <div>Rechazados</div>
+              </div>
+              <div class="stat">
+                <div class="n">${Number(evento.pendientes || 0)}</div>
+                <div>Pendientes</div>
+              </div>
+            </div>
+
+            <button onclick="verInvitados(${Number(evento.id_evento)}, '${escapeHtml(evento.nombre_evento)}')">
+              Ver invitados
+            </button>
+          </div>
+        `).join("");
+
+      } catch (error) {
+        console.error(error);
+        eventsContainer.innerHTML = `<p>Error al cargar eventos.</p>`;
+      }
+    }
+
+    async function verInvitados(idEvento, nombreEvento) {
+      nombreEventoActual = nombreEvento;
+
+      try {
+        const res = await fetch(`${API_BASE}/invitados_evento.php?id_evento=${idEvento}`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert(data.message || "No se pudieron cargar los invitados");
+          return;
+        }
+
+        invitadosActuales = data.data || [];
+        tituloEventoSeleccionado.textContent = `Invitados de: ${nombreEventoActual}`;
+        invitadosSection.classList.remove("hidden");
+        renderTabla();
+
+        invitadosSection.scrollIntoView({
+          behavior: "smooth"
+        });
+
+      } catch (error) {
+        console.error(error);
+        alert("Error al cargar invitados");
+      }
+    }
+
+    function renderTabla() {
+      const q = searchInput.value.trim().toLowerCase();
+      const estado = statusFilter.value;
+
+      const filtrados = invitadosActuales.filter(item => {
+        const coincideTexto =
+          (item.nombre || "").toLowerCase().includes(q) ||
+          (item.codigo_invitado || "").toLowerCase().includes(q) ||
+          (item.telefono || "").toLowerCase().includes(q) ||
+          (item.grupo_familiar || "").toLowerCase().includes(q);
+
+        const coincideEstado = !estado || item.estado_invitado === estado;
+
+        return coincideTexto && coincideEstado;
+      });
+
+      resumenInvitados.textContent = `${filtrados.length} invitado(s) mostrados de ${invitadosActuales.length}`;
+
+      if (!filtrados.length) {
+        tablaInvitados.innerHTML = `
+          <tr>
+            <td colspan="9">No se encontraron invitados.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tablaInvitados.innerHTML = filtrados.map(item => `
+        <tr>
+          <td>
+            <strong>${escapeHtml(item.nombre)}</strong><br>
+            <span class="muted">${escapeHtml(item.grupo_familiar || "")}</span>
+          </td>
+          <td>${escapeHtml(item.telefono || "-")}</td>
+          <td>${escapeHtml(item.codigo_invitado || "-")}</td>
+          <td>${escapeHtml(item.pases ?? "-")}</td>
+          <td>${escapeHtml(item.numero_mesa || "-")}</td>
+          <td>${badgeEstado(item.estado_invitado)}</td>
+          <td>${escapeHtml(item.cantidad_confirmada ?? 0)}</td>
+          <td>${escapeHtml(item.mensaje_confirmacion || "-")}</td>
+          <td>${escapeHtml(item.fecha_confirmacion || "-")}</td>
+        </tr>
+      `).join("");
+    }
+
+btnLogout.addEventListener("click", async function () {
+  try {
+    const res = await fetch(`${API_BASE}/auth/logout.php`, {
+      method: "POST",
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    alert(data.message || "No se pudo cerrar sesión");
+  } catch (error) {
+    console.error(error);
+    alert("Error al cerrar sesión");
+  }
+});
+
+    searchInput.addEventListener("input", renderTabla);
+    statusFilter.addEventListener("change", renderTabla);
+
+    window.verInvitados = verInvitados;
+
+    (async function init() {
+      const user = await validarSesion();
+      if (!user) return;
+      await cargarDashboard();
+    })();
+  </script>
+</body>
+</html>
