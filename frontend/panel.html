@@ -222,9 +222,9 @@
               </div>
             </div>
 
-            <button onclick="verInvitados(${Number(evento.id_evento)}, '${escapeHtml(evento.nombre_evento)}')">
-              Ver invitados
-            </button>
+<button onclick='verInvitados(${Number(evento.id_evento)}, ${JSON.stringify(evento.nombre_evento || "")})'>
+  Ver invitados
+</button>
           </div>
         `).join("");
 
@@ -287,7 +287,7 @@
         if (!filtrados.length) {
           tablaInvitados.innerHTML = `
   <tr>
-    <td colspan="11">No se encontraron invitados.</td>
+    <td colspan="8">No se encontraron invitados.</td>
   </tr>
   `;
           return;
@@ -327,9 +327,21 @@ ${
 </td>
 
 <td data-label="Link">
-<button class="btn btn-small btn-copy" onclick="copiarLink(${JSON.stringify(item.link_personalizado || "")})">
-Copiar
-</button>
+  ${
+    item.link_personalizado
+      ? `
+        <div class="actions-cell">
+          <a href="${escapeHtml(item.link_personalizado)}" target="_blank">Abrir</a>
+          <button
+            class="btn btn-small btn-copy"
+            data-link="${escapeHtml(item.link_personalizado)}"
+            onclick="copiarLinkDesdeBoton(this)">
+            Copiar
+          </button>
+        </div>
+      `
+      : `<span class="muted">Sin link</span>`
+  }
 </td>
 
 <td data-label="Acciones">
@@ -348,20 +360,22 @@ Editar
       function verMensaje(mensaje) {
         alert(mensaje);
       }
-      async function copiarLink(link) {
-        if (!link) {
-          alert("Este invitado no tiene link personalizado");
-          return;
-        }
+      async function copiarLinkDesdeBoton(btn) {
+  const link = btn.getAttribute("data-link") || "";
 
-        try {
-          await navigator.clipboard.writeText(link);
-          alert("Link copiado");
-        } catch (error) {
-          console.error(error);
-          prompt("Copia este link:", link);
-        }
-      }
+  if (!link) {
+    alert("Este invitado no tiene link personalizado");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(link);
+    alert("Link copiado");
+  } catch (error) {
+    console.error(error);
+    prompt("Copia este link:", link);
+  }
+}
 
       async function editarInvitado(idInvitado) {
         const item = invitadosActuales.find(
@@ -505,9 +519,10 @@ Editar
       searchInput.addEventListener("input", renderTabla);
       statusFilter.addEventListener("change", renderTabla);
 
-      window.verInvitados = verInvitados;
-      window.copiarLink = copiarLink;
-      window.editarInvitado = editarInvitado;
+window.verInvitados = verInvitados;
+window.copiarLinkDesdeBoton = copiarLinkDesdeBoton;
+window.editarInvitado = editarInvitado;
+window.verMensaje = verMensaje;
 
       (async function init() {
       const user = await validarSesion();
