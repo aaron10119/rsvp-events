@@ -203,26 +203,31 @@
             <div><strong>Fecha:</strong> ${escapeHtml(evento.fecha_evento || "-")}</div>
             <div><strong>Estatus:</strong> ${escapeHtml(evento.estatus || "-")}</div>
 
-            <div class="stats">
-              <div class="stat">
-                <div class="n">${Number(evento.total_invitados || 0)}</div>
-                <div>Total</div>
-              </div>
-              <div class="stat">
-                <div class="n">${Number(evento.confirmados || 0)}</div>
-                <div>Confirmados</div>
-              </div>
-              <div class="stat">
-                <div class="n">${Number(evento.rechazados || 0)}</div>
-                <div>Rechazados</div>
-              </div>
-              <div class="stat">
-                <div class="n">${Number(evento.pendientes || 0)}</div>
-                <div>Pendientes</div>
-              </div>
+            <div class="grid-stats">
+            
+            <div class="card-stat">
+              <div class="number">${Number(evento.total_invitados || 0)}</div>
+              <div>Total</div>
             </div>
 
-<button onclick='verInvitados(${Number(evento.id_evento)}, ${JSON.stringify(evento.nombre_evento || "")})'>
+            <div class="card-stat">
+              <div class="number">${Number(evento.confirmados || 0)}</div>
+              <div>Confirmados</div>
+            </div>
+
+            <div class="card-stat">
+              <div class="number">${Number(evento.rechazados || 0)}</div>
+              <div>Rechazados</div>
+            </div>
+
+            <div class="card-stat">
+              <div class="number">${Number(evento.pendientes || 0)}</div>
+              <div>Pendientes</div>
+            </div>
+
+          </div>
+
+<button class="btn btn-secondary" onclick='verInvitados(${Number(evento.id_evento)}, ${JSON.stringify(evento.nombre_evento || "")})'>
   Ver invitados
 </button>
           </div>
